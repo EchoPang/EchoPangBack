@@ -18,4 +18,7 @@ export class Waste {
 
   @CreateDateColumn()
   recordDate: Date; // 자동으로 주차 단위로 관리
+
+  @Column({ nullable: true })
+  wasteHash: string; 
 }

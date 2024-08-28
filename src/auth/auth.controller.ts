@@ -35,6 +35,6 @@ export class AuthController {
 
     const newUser = await this.usersService.createUser(walletAddress, email, farmInfo);
     const jwt = await this.authService.generateJwt(newUser);
-    return { accessToken: jwt };
+    return { userId: newUser.userId, accessToken: jwt };
   }
 }
