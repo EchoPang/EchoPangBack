@@ -5,7 +5,10 @@ import { User } from '../users/user.entity';
 @Entity()
 export class Reward {
   @PrimaryGeneratedColumn()
-  transactionId: number; // 보상 지급 tx id
+  rewardId: number;
+
+  @Column()
+  transactionId: string; // 보상 지급 tx id
 
   @ManyToOne(() => User, user => user.rewards)
   @JoinColumn({ name: 'userId' })
@@ -16,7 +19,7 @@ export class Reward {
   goal: Goal; // 달성한 목표
 
   @Column()
-  wasteType: string; // '영농 폐기물', '폐비닐', '합성수지', ...
+  wasteType: string; // 영농 폐기물, 폐비닐, 합성수지(PE류 제외), 기타 폐기물, 오수
 
   @Column()
   description: string; // 보상 사유

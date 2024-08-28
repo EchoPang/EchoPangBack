@@ -1,9 +1,17 @@
 import { Module } from '@nestjs/common';
-import { GoalsController } from './goals.controller';
-import { GoalsService } from './goals.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from 'src/users/user.entity';
+import { Waste } from 'src/waste/waste.entity';
+import { Goal } from './goal.entity';
+import { GoalController } from './goals.controller';
+import { GoalService } from './goals.service';
 
 @Module({
-  controllers: [GoalsController],
-  providers: [GoalsService]
+  imports: [
+    TypeOrmModule.forFeature([Goal, User, Waste]), // GoalRepository를 제공하기 위해 Goal 엔티티 추가
+  ],
+  providers: [GoalService],
+  controllers: [GoalController],
+  exports: [GoalService],
 })
 export class GoalsModule {}

@@ -10,15 +10,15 @@ export class Waste {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column()
-  wasteAmount: number;
+  @Column('decimal', { precision: 10, scale: 6 })
+  wasteAmount: number; // 폐기물 배출량
 
   @Column()
-  wasteType: string; // 예: '영농 폐기물', '폐비닐', '합성수지', ...
+  wasteType: string; // 영농 폐기물, 폐비닐, 합성수지(PE류 제외), 기타 폐기물, 오수
 
   @CreateDateColumn()
-  recordDate: Date; // 자동으로 주차 단위로 관리
+  recordDate: Date; // 일주일에 한 번 날짜로 기록되게 함
 
   @Column({ nullable: true })
-  wasteHash: string; 
+  wasteHash: string; // waste data hash 값을 blockchain에 저장
 }
