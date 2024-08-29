@@ -21,4 +21,7 @@ export class Waste {
 
   @Column({ nullable: true })
   wasteHash: string; // waste data hash 값을 blockchain에 저장
+
+  @Column({ nullable: true })
+  transactionHash: string; // 트랜잭션 해시 필드 추가
 }

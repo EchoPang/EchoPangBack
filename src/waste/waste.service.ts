@@ -59,13 +59,14 @@ export class WasteService {
       wasteAmount: wasteData.wasteAmount,
       wasteType: wasteData.wasteType,
       recordDate: wasteData.recordDate,
-      wasteHash: hash
+      wasteHash: hash,
+      transactionHash: tx.hash,
     });
 
     await this.wasteRepository.save(wasteRecord);
 
 
-    return { transactionHash: tx.hash, wasteRecord: wasteRecord };
+    return { wasteRecord: wasteRecord };
   }
 
   async getWasteRecords(userId: number): Promise<Waste[]> {
