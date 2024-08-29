@@ -14,7 +14,6 @@ export class WasteController {
     const result = await this.wasteService.recordWaste(wasteRecordData);
     return {
       message: '폐기물 기록이 블록체인에 저장되었습니다.',
-      transactionHash: result.transactionHash,
       wasteRecord: result.wasteRecord,
     };
   }
