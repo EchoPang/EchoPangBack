@@ -21,4 +21,10 @@ export class RewardsController {
     const rewards = await this.rewardsService.getRewards(userId);
     return { rewards };
   }
+
+  @Get('balance')
+  async getBalance(@Query('userId') userId: number) {
+    const balance = await this.rewardsService.getBalance(userId);
+    return { userId, balance: `${balance} EFT` };
+  }
 }

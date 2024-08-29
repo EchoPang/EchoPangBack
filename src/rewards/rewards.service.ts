@@ -27,6 +27,7 @@ export class RewardsService {
     this.provider = new ethers.JsonRpcProvider(`https://arbitrum-sepolia.infura.io/v3/${infuraProjectId}`);
     this.wallet = new ethers.Wallet(privateKey, this.provider);
     const contractABI = [
+        "function balanceOf(address _user) public view returns (uint256)",
         "function rewardTokens(address _user, string memory _wasteType, uint256 _reward) public",
         "event RewardIssued(address indexed user, string wasteType, uint256 amount)"
     ];
@@ -46,11 +47,13 @@ export class RewardsService {
       throw new NotFoundException('Goal not found');
     }
 
-    const co2Reduction = this.calculateCo2Reduction(wasteType, goal.currentAmount);
-    const tokenAmount = this.calculateTokenAmount(co2Reduction);
+    const achievementRate = (goal.targetAmount / goal.currentAmount) * 100;
+    let tokenAmount = this.calculateTokenAmount(achievementRate);
+    tokenAmount = Math.ceil(tokenAmount);
 
     if (tokenAmount > 0) {
-      const tx = await this.contract.rewardTokens(user.walletAddress, wasteType, tokenAmount);
+      const weiTokenAmount = ethers.parseUnits(tokenAmount.toString(), 18);
+      const tx = await this.contract.rewardTokens(user.walletAddress, wasteType, weiTokenAmount);
       await tx.wait();
 
       const reward = this.rewardsRepository.create({
@@ -70,33 +73,18 @@ export class RewardsService {
     }
   }
 
-  private calculateCo2Reduction(wasteType: string, currentAmount: number): number {
-    const CO2_FACTORS = {
-    // target: 기준값, factor: CO2 발생계수
-      '영농 폐기물': { target: 0.0022, factor: 1.65 },
-      '폐비닐': { target: 0.0023, factor: 1.65 },
-      '합성수지(PE류 제외)': { target: 0.001, factor: 1.989 },
-      '기타 폐기물': { target: 0.000026, factor: 0.565 },
-      '우수 및 오수': { target: 1500, factor: 0.0623 / 1000 } // L/day to t/day
-    };
+  private calculateTokenAmount(achievementRate: number): number {
+    const BASE_REWARD = 2; // 기본 보상 2 EFT
 
-    const { target, factor } = CO2_FACTORS[wasteType] || { target: 0, factor: 0 };
-    // 기준값보다 많이 발생한 경우 보상 제외 (0으로 설정)
-    const reduction = Math.max(0, target - currentAmount); 
+    let tokenAmount = 0;
 
-    return reduction * factor;
-  }
-
-  private calculateTokenAmount(co2Reduction: number): number {
-    const TOKEN_PER_TON_CO2 = 100; // 1톤의 CO2 저감 = 100 EFT
-    const MINIMUM_REWARD = 2; // 최소 보상 양 (2 EFT)
-    
-    // 기본적으로 CO2 저감량에 따라 보상 계산
-    let tokenAmount = Math.floor(co2Reduction * TOKEN_PER_TON_CO2);
-
-    // 만약 계산된 토큰 양이 최소 보상 양보다 작다면, 최소 보상 적용
-    if (tokenAmount > 0 && tokenAmount < MINIMUM_REWARD) {
-        tokenAmount = MINIMUM_REWARD;
+    if (achievementRate >= 100) {
+      // 목표 초과 달성 시 보상 증가
+      tokenAmount = BASE_REWARD + BASE_REWARD * ((achievementRate - 100) / 5); // 100%를 넘는 달성률의 5%마다 보상 증가
+    } else if (achievementRate >= 90) {
+        tokenAmount = BASE_REWARD * 0.5; // 90% 이상 달성 시 기본 보상의 절반 지급
+    } else {
+        tokenAmount = 0; // 90% 미만 달성 시 보상 없음
     }
 
     return tokenAmount;
@@ -104,5 +92,14 @@ export class RewardsService {
 
   async getRewards(userId: number): Promise<Reward[]> {
     return await this.rewardsRepository.find({ where: { user: { userId } }, relations: ['goal'] });
+  }
+
+  async getBalance(userId: number): Promise<string> {
+    const user = await this.userRepository.findOne({ where: { userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const balance = await this.contract.balanceOf(user.walletAddress);
+    return ethers.formatUnits(balance, 18); // EFT 단위로 변환하여 반환
   }
 }

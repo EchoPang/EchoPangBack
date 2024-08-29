@@ -34,7 +34,7 @@ export class GoalService {
     }
 
     const currentAmount = waste.wasteAmount;
-    const achievementRate = (currentAmount / goalData.targetAmount) * 100;
+    const achievementRate = (goalData.targetAmount / currentAmount) * 100;
 
     const goal = this.goalRepository.create({
       user: user,
