@@ -4,9 +4,6 @@ export class CreateRewardDto {
   @IsInt()
   userId: number;
 
-  @IsInt()
-  goalId: number;
-
   @IsString()
   @IsNotEmpty()
   wasteType: string;

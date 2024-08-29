@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as crypto from 'crypto';
 import { ethers } from 'ethers';
+import { Goal } from 'src/goals/goal.entity';
 import { User } from 'src/users/user.entity';
 import { Repository } from 'typeorm';
 import { CollectWasteDto } from './dto/collect-waste.dto';
@@ -19,6 +20,7 @@ export class WasteService {
   constructor(
     @InjectRepository(Waste) private wasteRepository: Repository<Waste>,
     @InjectRepository(User) private userRepository: Repository<User>, 
+    @InjectRepository(Goal) private goalRepository: Repository<Goal>,
     private configService: ConfigService
   ) {
     const infuraProjectId = this.configService.get<string>('INFURA_PROJECT_ID');
@@ -65,6 +67,23 @@ export class WasteService {
 
     await this.wasteRepository.save(wasteRecord);
 
+    // Goal 업데이트 로직 추가
+    const goal = await this.goalRepository.findOne({
+      where: {
+        user: { userId: wasteData.userId },
+        wasteType: wasteData.wasteType,
+      },
+    });
+
+    if (goal) {
+      // currentAmount와 achievementRate 업데이트
+      goal.currentAmount = wasteData.wasteAmount;
+      goal.achievementRate = goal.currentAmount > 0
+        ? (goal.targetAmount / goal.currentAmount) * 100
+        : 0;
+
+      await this.goalRepository.save(goal);
+    }
 
     return { wasteRecord: wasteRecord };
   }

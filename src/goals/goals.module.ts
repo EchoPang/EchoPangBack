@@ -12,6 +12,6 @@ import { GoalService } from './goals.service';
   ],
   providers: [GoalService],
   controllers: [GoalController],
-  exports: [GoalService],
+  exports: [GoalService, TypeOrmModule],
 })
 export class GoalsModule {}

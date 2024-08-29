@@ -35,16 +35,22 @@ export class RewardsService {
   }
 
   async createReward(createRewardDto: CreateRewardDto): Promise<Reward> {
-    const { userId, goalId, wasteType, description } = createRewardDto;
+    const { userId, wasteType, description } = createRewardDto;
 
     const user = await this.userRepository.findOne({ where: { userId } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    const goal = await this.goalRepository.findOne({ where: { goalId } });
+    // userId와 wasteType으로 Goal 조회
+    const goal = await this.goalRepository.findOne({
+      where: {
+        user: { userId },
+        wasteType: wasteType
+      }
+    });
     if (!goal) {
-      throw new NotFoundException('Goal not found');
+      throw new NotFoundException('Goal not found for the specified wasteType');
     }
 
     const achievementRate = (goal.targetAmount / goal.currentAmount) * 100;
