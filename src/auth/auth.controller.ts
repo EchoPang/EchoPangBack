@@ -18,7 +18,7 @@ export class AuthController {
     }
 
     const jwt = await this.authService.generateJwt(user);
-    return { accessToken: jwt };
+    return { userId: user.userId, accessToken: jwt };
   }
 
   @Post('register')
