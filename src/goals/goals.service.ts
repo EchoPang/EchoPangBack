@@ -29,20 +29,17 @@ export class GoalService {
         wasteType: goalData.wasteType,
       },
     });
-    if (!waste) {
-      throw new NotFoundException('해당되는 폐기물 기록 없음');
-    }
 
-    const currentAmount = waste.wasteAmount;
-    const achievementRate = (goalData.targetAmount / currentAmount) * 100;
+    const currentAmount = waste ? waste.wasteAmount : 0;
+    const achievementRate = currentAmount > 0 ? (goalData.targetAmount / currentAmount) * 100 : 0;
 
     const goal = this.goalRepository.create({
       user: user,
       wasteType: goalData.wasteType,
-      targetAmount: goalData.targetAmount, //parseFloat(goalData.targetAmount.toFixed(6)),
-      currentAmount: currentAmount, //parseFloat(currentAmount.toFixed(6)), //goalData.currentAmount,
+      targetAmount: goalData.targetAmount,
+      currentAmount: currentAmount,
       unit: goalData.unit,
-      achievementRate: achievementRate //parseFloat(achievementRate.toFixed(2)) //goalData.achievementRate
+      achievementRate: achievementRate
     });
 
     await this.goalRepository.save(goal);
